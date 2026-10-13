@@ -5,7 +5,7 @@ def sleep_hours(record):
     """return sleep duration of one record (in hours)"""
 
     start = datetime.strptime(record["sleep"], "%H:%M")
-    end = datetime.stprtime(record["wake"], "%H:%M")
+    end = datetime.strptime(record["wake"], "%H:%M")
     seconds = (end - start).total_seconds()
     if seconds < 0: # went to bed before mignight, so add 24 hours
         seconds = seconds + 24 * 3600
@@ -49,6 +49,17 @@ def average_sleep(records):
     total = 0
     for r in records:
         total = total + sleep_hours(r)
+    return total / len(records)
+
+
+def average_quality(records):
+    """return average quality, 0 if no records"""
+
+    if len(records) == 0:
+        return 0  # avoid division by zero 
+    total = 0
+    for r in records:
+        total = total + r["quality"]
     return total / len(records)
 
 
