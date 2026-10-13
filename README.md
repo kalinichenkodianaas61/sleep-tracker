@@ -1,9 +1,9 @@
-# Трекер сну
+# Sleep tracker
 
-Консольна програма для обліку сну.
+Console sleep tracking program
 
-Назва:         Трекер сну
-Для кого:      для мене, щоб бачити, скільки і як я сплю
-Запис:         дата, час засинання, час підйому, якість (число від 1 до 5)
-Операції:      додати, показати всі, знайти за якістю, видалити
-Звіти:         середня тривалість сну, середня якість, найкоротша ніч
+Name: Sleep tracker
+For whom: for me to see how much and how I sleep
+Record: date, falling asleep time, wake up time, sleep quality (1-100%)
+Operations: show all, find by quality/duration, delete
+Reports: average duration/quality of sleep, shortest/longest sleep
