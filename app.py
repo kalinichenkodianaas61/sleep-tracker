@@ -32,6 +32,8 @@ def add_record():
         datetime.strptime(data["sleep"], "%H:%M")
         datetime.strptime(data["wake"], "%H:%M")
         quality = int(data["quality"])
+        if not 1 <= quality <= 100:
+            raise ValueError
     except (ValueError, TypeError):
         return jsonify({"error": "date DD-MM-JJ, time HH:MM, quality integer"}), 400
     new_id = storage.add(data["date"], data["sleep"], data["wake"], quality)
