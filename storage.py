@@ -1,34 +1,34 @@
-def load(filename):
-    """return a list of dicts from the file. Skip broken lines"""
+import sqlite3
 
-    records = [] # empty list for the result
-    try:
-        f = open(filename, "r", encoding="utf-8")
-    except FileNotFoundError:
-        return records # no file yet, so return an empty list
-    with f: 
-        for line in f:
-            line = line.strip() # removes spaces and new lines
-            if line == "":
-                continue # skip empty lines
-            parts = line.split(";") # split the line by ";"
-            try:
-                record = {
-                    "date": parts[0],
-                    "sleep": parts[1],
-                    "wake": parts[2],
-                    "quality": int(parts[3]),
-                }
-            except (IndexError, ValueError): # IndexError - too few fields, ValueError - quality is not a number
-                print("the damaged line was skipped", line)
-                continue
-            records.append(record)
-    return records        
+DB = "data.db"
 
+def connect():
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row  
+    return conn
 
-def save(filename, records):
-    """write all records to the file, replacing the old content"""
+def init():
+    # create table if missing 
+    with connect() as conn:
+        conn.execute("""CREATE TABLE IF NOT EXISTS records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL, sleep TEXT NOT NULL,
+            wake TEXT NOT NULL, quality INTEGER NOT NULL)""")
 
-    with open(filename, "w", encoding="utf-8") as f:
-        for r in records:
-            f.write(f"{r['date']};{r['sleep']};{r['wake']};{r['quality']}\n")
+def load():
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM records ORDER BY id").fetchall()
+    return [dict(r) for r in rows]
+
+def add(date, sleep, wake, quality):
+    # values only via ? 
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO records (date, sleep, wake, quality) VALUES (?, ?, ?, ?)",
+            (date, sleep, wake, quality))
+        return cur.lastrowid
+
+def delete(item_id):
+    with connect() as conn:
+        cur = conn.execute("DELETE FROM records WHERE id = ?", (item_id,))
+        return cur.rowcount > 0  # true if it existed 
