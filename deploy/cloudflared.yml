@@ -1,0 +1,7 @@
+tunnel: 8f513265-d9c9-43f5-b6de-35936cc873f2
+credentials-file: C:\Users\KalinichenkoDiana\.cloudflared\8f513265-d9c9-43f5-b6de-35936cc873f2.json
+
+ingress:
+  - hostname: api.kalinichenko2.pp.ua
+    service: http://127.0.0.1:8000
+  - service: http_status:404
