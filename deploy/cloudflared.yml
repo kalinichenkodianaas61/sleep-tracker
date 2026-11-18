@@ -5,5 +5,3 @@ ingress:
   - hostname: api.kalinichenko2.pp.ua
     service: http://127.0.0.1:8000
   - service: http_status:404
-
-EnvironmentFile=C:\Users\KalinichenkoDiana\Desktop\code\лаби\sleep-tracker\.env 

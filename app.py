@@ -3,14 +3,20 @@ from flask import Flask, request, jsonify
 import storage, logic
 from flask_cors import CORS
 import os
+from dotenv import load_dotenv
 import hmac
 from flask import abort
+
+load_dotenv()  # Load variables from .env 
 
 app = Flask(__name__)
 # secret comes from environment, not from code 
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
 
 def require_admin():
+    # Tunnel traffic carries Cloudflare headers, so admin works only locally
+    if "Cf-Connecting-Ip" in request.headers:
+        abort(403)
     token = request.headers.get("X-Admin-Token", "")
     # refuse if token is not set or does not match (відмова, якщо токен не заданий або не збігається)
     if not ADMIN_TOKEN or not hmac.compare_digest(token.encode(), ADMIN_TOKEN.encode()):
@@ -70,4 +76,4 @@ def report():
     return jsonify({"average_sleep": logic.average_sleep(storage.load())})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()  # no debug mode 
