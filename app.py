@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Flask, request, jsonify
 import storage, logic
+from models import SleepRecord, DEFAULT_FACTOR
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
@@ -36,7 +37,7 @@ def list_records():
             records = logic.find_by_quality(records, int(lo), int(hi))
         except ValueError:
             return jsonify({"error": "min_quality and max_quality must be an integer"}), 400
-    return jsonify(records)
+    return jsonify([r.to_dict() for r in records])
 
 @app.post("/records")
 def add_record():
@@ -51,12 +52,13 @@ def add_record():
         datetime.strptime(data["date"], "%d-%m-%y")
         datetime.strptime(data["sleep"], "%H:%M")
         datetime.strptime(data["wake"], "%H:%M")
-        quality = int(data["quality"])
-        if not 1 <= quality <= 100:
-            raise ValueError
+        # the class checks quality and factor itself 
+        record = SleepRecord(data["date"], data["sleep"], data["wake"],
+                             data["quality"], data.get("factor", DEFAULT_FACTOR))
     except (ValueError, TypeError):
-        return jsonify({"error": "date DD-MM-JJ, time HH:MM, quality integer"}), 400
-    new_id = storage.add(data["date"], data["sleep"], data["wake"], quality)
+        return jsonify({"error": "date DD-MM-YY, time HH:MM, quality 1-100, "
+                                 "factor up to 50 characters"}), 400
+    new_id = storage.add(record)
     return jsonify({"id": new_id}), 201
 
 @app.delete("/admin/records/<int:item_id>")
@@ -69,7 +71,24 @@ def delete_record(item_id):
 @app.get("/admin/export")
 def export_records():
     require_admin()
-    return jsonify(storage.load())
+    return jsonify([r.to_dict() for r in storage.load()])
+
+
+@app.get("/admin/log")
+def admin_log():
+    require_admin()
+    try:
+        limit = int(request.args.get("limit", 50))
+    except ValueError:
+        return jsonify({"error": "limit must be an integer"}), 400
+    limit = max(1, min(limit, 500))  # keep it reasonable 
+    return jsonify(storage.load_log(limit))
+
+@app.get("/report/factors")
+def report_factors():
+    # report built with JOIN of records and factors
+    return jsonify(storage.factor_report())
+
 
 @app.get("/report")
 def report():
