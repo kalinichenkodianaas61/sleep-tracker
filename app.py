@@ -2,8 +2,20 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 import storage, logic
 from flask_cors import CORS
+import os
+import hmac
+from flask import abort
 
 app = Flask(__name__)
+# secret comes from environment, not from code 
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
+
+def require_admin():
+    token = request.headers.get("X-Admin-Token", "")
+    # refuse if token is not set or does not match (відмова, якщо токен не заданий або не збігається)
+    if not ADMIN_TOKEN or not hmac.compare_digest(token.encode(), ADMIN_TOKEN.encode()):
+        abort(403)
+
 CORS(app, origins=["https://kalinichenko2.pp.ua", "http://localhost:8080"])
 storage.init()
 
@@ -41,11 +53,17 @@ def add_record():
     new_id = storage.add(data["date"], data["sleep"], data["wake"], quality)
     return jsonify({"id": new_id}), 201
 
-@app.delete("/records/<int:item_id>")
+@app.delete("/admin/records/<int:item_id>")
 def delete_record(item_id):
+    require_admin()
     if storage.delete(item_id):
         return jsonify({"deleted": item_id})
-    return jsonify({"error": "not found"}), 404
+    return jsonify({"error": "не знайдено"}), 404
+
+@app.get("/admin/export")
+def export_records():
+    require_admin()
+    return jsonify(storage.load())
 
 @app.get("/report")
 def report():
